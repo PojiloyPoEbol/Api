@@ -9,19 +9,16 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy import *
 import psycopg2 as ps
 
-engine = create_engine("postgresql+psycopg2://postgres:Scpsosat2023@localhost:5432/public")
-conn = ps.connect(
-    host='localhost',
-    user='postgres',
-    password='Scpsosat2023',
-    database='postgres'
-)
-Base = declarative_base()
-Session = sessionmaker(bind=engine)
-
 
 # Абстрактный класс API
 class AbstractDbAPI:
+    @staticmethod
+    def create_conn(passlog_path,database,ip_or_localhost,con_port):
+        with open(f"{passlog_path}", "r") as file:
+            passlog = file.readline()
+        engine = create_engine(f"postgresql+psycopg2://{passlog}@{ip_or_localhost}:{con_port}/{database}")
+        return engine
+
     @staticmethod
     def create_from_df_table(engine, df,table):
         try:
@@ -32,6 +29,7 @@ class AbstractDbAPI:
 
     @staticmethod
     def delete_from_table_cond(engine,table,condition):
+        Session = sessionmaker(bind=engine)
         try:
             with Session(bind=engine) as session:
                 session.execute(text(f'DELETE FROM {table} WHERE {condition};'))
@@ -43,6 +41,7 @@ class AbstractDbAPI:
 
     @staticmethod
     def delete_from_table_col(engine, table, column):
+        Session = sessionmaker(bind=engine)
         try:
             with Session(bind=engine) as session:
                 session.execute(text(f'ALTER TABLE {table} DROP COLUMN {column};'))
@@ -54,6 +53,7 @@ class AbstractDbAPI:
 
     @staticmethod
     def truncate_table(engine,table):
+        Session = sessionmaker(bind=engine)
         try:
             with Session(bind=engine) as session:
                 session.execute(text(f'TRUNCATE TABLE {table}'))
@@ -62,6 +62,16 @@ class AbstractDbAPI:
         except SQLAlchemyError as e:
             print(f"Ошибка при очистке таблицы: {e}")
 
+    @staticmethod
+    def drop_table(engine,table):
+        Session = sessionmaker(bind=engine)
+        try:
+            with Session(bind=engine) as session:
+                session.execute(text(f'DROP TABLE {table}'))
+                session.commit()
+                print(f'Таблица {table} успешно удалена!')
+        except SQLAlchemyError as e:
+            print(f'Ошибка при удалении таблицы: {e}')
 
     @staticmethod
     def read_sql(engine,query):
@@ -88,6 +98,7 @@ class AbstractDbAPI:
 
     @staticmethod
     def execute(engine, query):
+        Session = sessionmaker(bind=engine)
         try:
             with Session(bind=engine) as session:
                 session.execute(text(query))
