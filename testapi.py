@@ -1,12 +1,11 @@
-from api import AbstractDbAPI,measure_execution_time
+from api import AbstractDbAPI
 import pandas as pd
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine
 from sqlalchemy import *
-engine = create_engine("postgresql+psycopg2://postgres:Scpsosat2023@localhost:5432/postgres")
 
-Session = sessionmaker(engine)
 api = AbstractDbAPI
+engine = api.create_conn('databaseinf.txt','postgres','localhost','5432')
 # df = api.read_sql(engine,'SELECT * FROM users')
 # print(df)
 # api.create_table(engine,df,'users2')
@@ -15,5 +14,9 @@ api = AbstractDbAPI
 # api.execute(engine,'DROP TABLE IF EXISTS users2;')
 
 # api.delete_from_table_cond(engine,'users2',"имя='Иван'")
-api.delete_from_table_col(engine,'users2','адрес')
+# engine = create_engine("postgresql+psycopg2://postgres:Scpsosat2023@localhost:5432/postgres")
+df = api.read_sql(engine,'SELECT * FROM users2')
+print(df)
+api.drop_table(engine,'users2')
+# api.delete_from_table_col(engine,'users2','имя')
 
